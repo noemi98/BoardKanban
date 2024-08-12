@@ -1,0 +1,44 @@
+{
+   "tasks": [
+      {
+         "id": 1,
+         "title": "Enviar el aviso de forma masiva a los proveedores",
+         "description": "Elaborar y enviar un afiche sobre los próximos cambios a considera en la plataforma",
+         "status": "Por hacer",
+         "priority": "Alta",
+         "limit": "2024-08-30"
+      },
+      {
+         "id": 2,
+         "title": "Añadir las mejoras acordadas en reunión",
+         "description": "Implementar la lista de mejoras sugeridad por el cliente",
+         "status": "Por hacer",
+         "priority": "Media",
+         "limit": "2024-08-15"   
+      },
+      {
+         "id": 3,
+         "title": "Configurar moodle para el nuevo curso",
+         "description": "Carar los recursos necesarioa para el nuevo curso",
+         "status": "En progreso",
+         "priority": "Baja",
+         "limit": "2024-08-18"
+      },
+      {
+         "id": 4,
+         "title": "Habilitar una tarea para la actualización de datos",
+         "description": "Crear un SP y programar una tarea para la actualización de datos",
+         "status": "Hecho",
+         "priority": "Baja",
+         "limit": "2024-08-12"
+      },
+      {
+         "id": 5,
+         "title": "Realizar el pago del hosting",
+         "description": "Contactarse con el proveedor para realizar el pago del hosting",
+         "status": "En progreso",
+         "priority": "Baja",
+         "limit": "2024-08-20"
+      }
+   ]
+}
