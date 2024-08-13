@@ -35,6 +35,30 @@
   align-items: center;
   margin: 0px !important;
 }
+
+.table-kanban tbody{
+  background-image: url('/wall_tablero.jpg');
+  background-size: cover; /* Opcional: para cubrir toda el área */
+  width: 100%;
+  table-layout: fixed;
+}
+
+.table-kanban th,
+.table-kanban td {
+  width: 1%; /* Esto asegura que todas las columnas tengan el mismo ancho */
+  text-align: center; /* Centrar el contenido, opcional */
+}
+/*
+.table-kanban thead th {
+  text-align: center !important;
+  background-color: white !important;
+  border: 1px solid #C1C1C1 !important;
+  border-radius: 15px !important;
+  box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px !important;
+}*/
+
+
+
 /*MODAL*/
 .modal {
   display: flex;
@@ -67,6 +91,16 @@
 .task-box {
   width: 100%; /* Ocupa el 100% del ancho del contenedor */
   background-color: #C4E8F0; /* Fondo para las cajas */
+  padding: 1rem; /* Espacio interno de las cajas */
+  border-radius: 4px; /* Bordes redondeados */
+  /*box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  Sombra para dar profundidad */
+  margin-bottom: 1rem; /* Espacio entre las filas de cajas */
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+}
+
+.task-box-2 {
+  width: 100%; /* Ocupa el 100% del ancho del contenedor */
+  background-color: #FFB8BE; /* Fondo para las cajas */
   padding: 1rem; /* Espacio interno de las cajas */
   border-radius: 4px; /* Bordes redondeados */
   /*box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  Sombra para dar profundidad */
