@@ -66,22 +66,34 @@ export const TaskBoard = () => {
       setSelectedCategoryIndex(index);
    };
 
+   const isTaskDisabled = (task) => {
+      // Verifica si la tarea está en cualquier categoría
+      return Object.values(assignedTasks).flat().some(t => t.id === task.id);
+   };
+
    const handleTaskSelect = (task) => {
       const newAssignedTasks = { ...assignedTasks };
       if (!newAssignedTasks[selectedCategoryIndex]) {
          newAssignedTasks[selectedCategoryIndex] = [];
       }
       newAssignedTasks[selectedCategoryIndex].push(task);
+
       setAssignedTasks(newAssignedTasks);
+      setTasks(prevTasks =>
+         prevTasks.map(t =>
+            t.id === task.id ? { ...t, isChecked: true } : t
+         )
+      );
 
       setActiveCheckboxes(false);
       setSelectedCategoryIndex(null);
    };
 
    const isTaskAssigned = (task) => {
-      return Object.values(assignedTasks).some(
+      /*return Object.values(assignedTasks).some(
          tasksInCategory => tasksInCategory.includes(task)
-      );
+      );*/
+      return Object.values(assignedTasks).flat().includes(task);
    };
 
    // Remover tarea de la categoría
@@ -89,16 +101,28 @@ export const TaskBoard = () => {
       const newAssignedTasks = { ...assignedTasks };
       newAssignedTasks[categoryIndex] = newAssignedTasks[categoryIndex].filter(t => t !== task);
       setAssignedTasks(newAssignedTasks);
+      // Asegúrate de que el estado del checkbox refleje los cambios
+      setTasks(prevTasks =>
+         prevTasks.map(t =>
+            t.id === task.id ? { ...t, isChecked: false } : t
+         )
+      );
+   };
 
-      // Para desmarcar el checkbox al remover la tarea
-      setActiveCheckboxes(false);
+   // Modificación en el checkbox para que esté vinculado al estado de la tarea
+   const handleTaskChange = (task) => {
+      if (task.isChecked) {
+         handleTaskRemove(task, selectedCategoryIndex);
+      } else {
+         handleTaskSelect(task);
+      }
    };
 
    // Mover tarea a la siguiente categoría
    const handleTaskMoveToNext = (task, categoryIndex) => {
       const newAssignedTasks = { ...assignedTasks };
       newAssignedTasks[categoryIndex] = newAssignedTasks[categoryIndex].filter(t => t !== task);
-      
+
       const nextCategoryIndex = (categoryIndex + 1) % categoryCount;
       if (!newAssignedTasks[nextCategoryIndex]) {
          newAssignedTasks[nextCategoryIndex] = [];
@@ -118,8 +142,11 @@ export const TaskBoard = () => {
                {tasks.map(task => (
                   <div key={task.id} className='task-box'>
                      <label className="checkbox">
-                        <input type="checkbox" disabled={!activeCheckboxes || isTaskAssigned(task)} onChange={() => handleTaskSelect(task)} />
-                        <span className='subtitle is-6'>{task.title}</span>
+                        <input type="checkbox" checked={task.isChecked || false} disabled={!activeCheckboxes || isTaskAssigned(task)} onChange={() => handleTaskChange(task)} />
+                        <span className={`subtitle is-6 ${task.isChecked ? 'has-text-grey-light' : ''}`}
+                           style={{ textDecoration: task.isChecked ? 'line-through' : 'none' }} >
+                           {task.title}
+                        </span>
                      </label>
                   </div>
                ))}
@@ -195,7 +222,7 @@ export const TaskBoard = () => {
                               <th key={index} style={{
                                  textAlign: 'center',
                                  backgroundColor: '#EBECF0',
-                                 height: '30px', 
+                                 height: '30px',
                                  verticalAlign: 'middle'
                               }}>
                                  {name || `Categoría ${index + 1}`}
@@ -213,12 +240,12 @@ export const TaskBoard = () => {
                                     </button>
                                  </div>
                                  {assignedTasks[index] && assignedTasks[index].map((task, taskIndex) => (
-                                    <div 
-                                       key={taskIndex} 
-                                       className='task-box-2' 
+                                    <div
+                                       key={taskIndex}
+                                       className='task-box-2'
                                        onClick={() => handleTaskRemove(task, index)}
                                        onContextMenu={(e) => {
-                                          e.preventDefault(); 
+                                          e.preventDefault();
                                           handleTaskMoveToNext(task, index);
                                        }}
                                     >
