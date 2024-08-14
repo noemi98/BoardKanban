@@ -49,15 +49,6 @@
   text-align: center; /* Centrar el contenido, opcional */
 }
 /*
-.table-kanban thead th {
-  text-align: center !important;
-  background-color: white !important;
-  border: 1px solid #C1C1C1 !important;
-  border-radius: 15px !important;
-  box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px !important;
-}*/
-
-
 
 /*MODAL*/
 .modal {
@@ -108,7 +99,6 @@
   box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
 }
 
-/* En tu archivo CSS */
 
 .checkbox input[type="checkbox"]:checked + .subtitle {
   color: #999; /* Color para el texto tachado */

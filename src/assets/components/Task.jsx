@@ -1,165 +1,158 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
-export const TaskBoard = () => {
-   const [tasks, setTasks] = useState([]);
-   const [assignedTasks, setAssignedTasks] = useState({});
-   const [isCheckboxActive, setIsCheckboxActive] = useState({});
+export const Task = ({ activeCheckboxes, handleTaskChange, tasks }) => {
+    const { spaceId } = useParams();
 
-   useEffect(() => {
-      axios.get('../../db.json')
-         .then(response => {
-            setTasks(response.data.tasks);
-            setIsCheckboxActive(response.data.tasks.reduce((acc, task) => {
-               acc[task.id] = false; // Todos los checkboxes comienzan desactivados
-               return acc;
-            }, {}));
-         })
-         .catch(error => {
-            console.error('Error fetching tasks:', error);
-         });
-   }, []);
+    const [isTaskModalOpen, setTaskModalOpen] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [currentTask, setCurrentTask] = useState({
+        id: null,
+        title: '',
+        description: '',
+        dueDate: '',
+        priority: 'Media'
+    });
 
-   const categoryNames = ["Por hacer", "En proceso", "Hecho"];
+    const handleTaskModalToggle = () => {
+        setTaskModalOpen(!isTaskModalOpen);
+        if (!isTaskModalOpen) {
+            setCurrentTask({
+                id: null,
+                title: '',
+                description: '',
+                dueDate: '',
+                priority: 'Media',
+                spaceId: spaceId
+            });
+            setIsEditMode(false);
+        }
+    };
 
-   const handlePlusClick = (categoryIndex) => {
-      // Activa todos los checkboxes
-      setIsCheckboxActive((prev) => {
-         const newState = { ...prev };
-         tasks.forEach(task => {
-            if (!Object.values(assignedTasks).flat().some(t => t.id === task.id)) {
-               newState[task.id] = true;
-            }
-         });
-         return newState;
-      });
-   };
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setCurrentTask({ ...currentTask, [name]: value });
+    };
 
-   const handleTaskCheckboxChange = (taskId, categoryIndex) => {
-      // Asigna la tarea a la categoría y desactiva el checkbox
-      const selectedTask = tasks.find(task => task.id === taskId);
+    const handleSaveCreate = () => {
+        if (isEditMode) {
+            axios.put(`http://localhost:3000/tasks/${currentTask.id}`, currentTask)
+                .then((response) => {
+                    const updatedTask = response.data;
+                    setTasks(prevTasks =>
+                        prevTasks.map(task => task.id === updatedTask.id ? updatedTask : task)
+                    );
+                    handleTaskModalToggle();
+                });
+        } else {
+            axios.post('http://localhost:3000/tasks', currentTask)
+                .then((response) => {
+                    const newTask = response.data;
+                    setTasks(prevTasks => [...prevTasks, newTask]); // Aquí se asegura de añadir el nuevo task con ID
+                    handleTaskModalToggle();
+                });
+        }
+    };
 
-      setAssignedTasks((prev) => {
-         const newAssignedTasks = { ...prev };
-         if (!newAssignedTasks[categoryIndex]) {
-            newAssignedTasks[categoryIndex] = [];
-         }
-         newAssignedTasks[categoryIndex].push(selectedTask);
-         return newAssignedTasks;
-      });
+    const handleEditTask = (task) => {
+        setCurrentTask(task);
+        setIsEditMode(true);
+        setTaskModalOpen(true);
+    };
 
-      setIsCheckboxActive((prev) => ({
-         ...prev,
-         [taskId]: false, // Desactiva el checkbox para la tarea seleccionada
-      }));
-   };
-
-   const handleTaskClick = (taskId, categoryIndex) => {
-      // Elimina la tarea de la categoría y activa su checkbox nuevamente
-      setAssignedTasks((prev) => {
-         const newAssignedTasks = { ...prev };
-         newAssignedTasks[categoryIndex] = newAssignedTasks[categoryIndex].filter(task => task.id !== taskId);
-         return newAssignedTasks;
-      });
-
-      setIsCheckboxActive((prev) => ({
-         ...prev,
-         [taskId]: true, // Activa el checkbox nuevamente
-      }));
-   };
-
-   const handleTaskRightClick = (event, taskId, categoryIndex) => {
-      event.preventDefault();
-      // Mueve la tarea a la siguiente categoría
-      const nextCategoryIndex = (categoryIndex + 1) % categoryNames.length;
-
-      setAssignedTasks((prev) => {
-         const newAssignedTasks = { ...prev };
-         // Elimina la tarea de la categoría actual
-         newAssignedTasks[categoryIndex] = newAssignedTasks[categoryIndex].filter(task => task.id !== taskId);
-
-         // Añade la tarea a la siguiente categoría
-         if (!newAssignedTasks[nextCategoryIndex]) {
-            newAssignedTasks[nextCategoryIndex] = [];
-         }
-         newAssignedTasks[nextCategoryIndex].push(tasks.find(task => task.id === taskId));
-         return newAssignedTasks;
-      });
-   };
-
-   return (
-      <div className="columns p-4">
-         <div className="column is-one-quarter" id="panel-task">
+    return (
+        <div className="column is-one-quarter" id="panel-task">
             <div className="box">
-               <h2 className="title is-4">Listado de Tareas</h2>
+                <h2 className="title is-4">Listado de Tareas</h2>
+                <button className="button is-primary is-rounded is-small" onClick={handleTaskModalToggle} id="plus">
+                    <span className='has-text-primary-20-invert'>+</span>
+                </button>
             </div>
             <div className="box task-container">
-               {tasks.map(task => (
-                  <div key={task.id} className='task-box'>
-                     <label className='checkbox'>
-                        <input
-                           type='checkbox'
-                           checked={!isCheckboxActive[task.id]}
-                           onChange={() => handleTaskCheckboxChange(task.id)}
-                           disabled={!isCheckboxActive[task.id]}
-                        />
-                        <span className='subtitle is-6'>{task.title}</span>
-                     </label>
-                  </div>
-               ))}
+                {tasks.map((task) => (
+                    <div key={task.id} className='task-box' >
+                        <label className="checkbox">
+                            <input
+                                type="checkbox"
+                                checked={task.isChecked || false}
+                                disabled={!activeCheckboxes || task.isAssigned}
+                                onChange={() => handleTaskChange(task)}
+                            />
+                            <span className={`subtitle is-6 ${task.isChecked ? 'has-text-grey-light' : ''}`}
+                                style={{ textDecoration: task.isChecked ? 'line-through' : 'none' }}>
+                                &nbsp;{task.title}
+                            </span>
+                        </label>
+                    </div>
+                ))}
             </div>
-         </div>
+            {isTaskModalOpen && (
+                <div className="modal is-active">
+                    <div className="modal-background" onClick={handleTaskModalToggle}></div>
+                    <div className="modal-card">
+                        <header className="modal-card-head">
+                            <p className="modal-card-title">{isEditMode ? 'Editar tarea' : 'Nueva tarea'}</p>
+                            <button className="delete" aria-label="close" onClick={handleTaskModalToggle}></button>
+                        </header>
+                        <section className="modal-card-body">
+                            <div className="field">
+                                <label className="label">Título</label>
+                                <div className="control">
+                                    <input className="input is-text" type="text" name="title"
+                                        value={currentTask.title}
+                                        onChange={handleInputChange}
+                                        placeholder="Título de la tarea" />
+                                </div>
+                            </div>
+                            <div className="field">
+                                <label className="label">Descripción</label>
+                                <div className="control">
+                                    <textarea className="textarea is-text" name="description"
+                                        value={currentTask.description}
+                                        onChange={handleInputChange}
+                                        placeholder="Descripción de la tarea" rows={2}></textarea>
+                                </div>
+                            </div>
+                            <div className='columns'>
+                                <div className='column is-half'>
+                                    <div className="field">
+                                        <label className="label">Vencimiento</label>
+                                        <div className="control">
+                                            <input className="input is-text" type="date" name="dueDate"
+                                                value={currentTask.dueDate}
+                                                onChange={handleInputChange}
+                                                placeholder="Fecha de vencimiento" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className='column is-half'>
+                                    <div className="field">
+                                        <label className="label">Importancia</label>
+                                        <div className="control">
+                                            <div className="select is-fullwidth is-text">
+                                                <select name="priority"
+                                                    value={currentTask.priority}
+                                                    onChange={handleInputChange}>
+                                                    <option>Urgente</option>
+                                                    <option>Alta</option>
+                                                    <option>Media</option>
+                                                    <option>Baja</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        <footer className="modal-card-foot">
+                            <button className="button is-success" onClick={handleSaveCreate}>{isEditMode ? 'Guardar cambios' : 'Crear tarea'}</button>&nbsp;
+                            <button className="button" onClick={handleTaskModalToggle}>Cancelar</button>
+                        </footer>
+                    </div>
+                </div>
+            )}
 
-         <div className="column" id="panel-board">
-            <div className="box">
-               <h2 className="title">Tablero Kanban</h2>
-            </div>
-            <div className="table-container">
-               <table className="table is-fullwidth">
-                  <thead>
-                     <tr>
-                        {categoryNames.map((name, index) => (
-                           <th key={index} style={{
-                              textAlign: 'center',
-                              backgroundColor: 'white',
-                              borderRadius: '15px',
-                              boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 15px'
-                           }}>{name}</th>
-                        ))}
-                     </tr>
-                  </thead>
-                  <tbody>
-                     <tr>
-                        {categoryNames.map((_, categoryIndex) => (
-                           <td key={categoryIndex} style={{ height: '80vh', textAlign: 'center' }}>
-                              <div className='pb-4'>
-                                 <button
-                                    className="button is-primary is-rounded is-small"
-                                    id="plus"
-                                    style={{ opacity: 0.7 }}
-                                    onClick={() => handlePlusClick(categoryIndex)}
-                                 >
-                                    <span className='has-text-primary-20-invert'>+</span>
-                                 </button>
-                              </div>
-
-                              {assignedTasks[categoryIndex] && assignedTasks[categoryIndex].map((task, taskIndex) => (
-                                 <div
-                                    key={taskIndex}
-                                    className='task-box-2'
-                                    onClick={() => handleTaskClick(task.id, categoryIndex)}
-                                    onContextMenu={(event) => handleTaskRightClick(event, task.id, categoryIndex)}
-                                 >
-                                    <span className='subtitle is-6'>{task.title}</span>
-                                 </div>
-                              ))}
-                           </td>
-                        ))}
-                     </tr>
-                  </tbody>
-               </table>
-            </div>
-         </div>
-      </div>
-   );
-};
+        </div>
+    );
+}

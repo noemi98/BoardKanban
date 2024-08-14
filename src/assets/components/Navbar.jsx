@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 export const Navbar = () => {
    return (
@@ -19,44 +20,15 @@ export const Navbar = () => {
 
             <div id="navbarBasicExample" className="navbar-menu">
                <div className="navbar-start">
-                  <a className="navbar-item">
+                  <Link className="navbar-item" to="/" style={{fontWeight: 'bold'}}>
+                     Página Principal
+                  </Link>
+                  <Link className="navbar-item" to="/espacios" style={{fontWeight: 'bold'}}>
+                     Espacios
+                  </Link>
+                  <Link className="navbar-item" to="/tablero" style={{ fontWeight: 'bold', pointerEvents: 'none', color: 'grey' }} is-disabled>
                      Tablero
-                  </a>
-
-                  <a className="navbar-item">
-                     Tareas
-                  </a>
-
-                  <div className="navbar-item has-dropdown is-hoverable">
-                     <a className="navbar-link">
-                        Otros
-                     </a>
-
-                     <div className="navbar-dropdown">
-                        <a className="navbar-item">
-                           About
-                        </a>
-                        <a className="navbar-item is-selected">
-                           Jobs
-                        </a>
-                        <a className="navbar-item">
-                           Contact
-                        </a>
-                     </div>
-                  </div>
-               </div>
-
-               <div className="navbar-end">
-                  <div className="navbar-item">
-                     <div className="buttons">
-                        <a className="button is-primary">
-                           <strong>Cerrar</strong>
-                        </a>
-                        <a className="button is-light">
-                           Iniciar sesión
-                        </a>
-                     </div>
-                  </div>
+                  </Link>
                </div>
             </div>
          </nav>

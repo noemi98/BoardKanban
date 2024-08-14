@@ -1,7 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useParams } from 'react-router-dom';
+import { Task } from './Task';
 
 export const TaskBoard = () => {
+   //FILTRO DE TAREAS POR SPACE
+   const { spaceId } = useParams(); // Obtener spaceId de la URL
+   const [tasks, setTasks] = useState([]);
+
+   const fetchTasks = async () => {
+      try {
+         const response = await axios.get(`http://localhost:3000/tasks?spaceId=${spaceId}`);
+         setTasks(response.data);
+         //console.log(response.data);
+      } catch (error) {
+         console.error("Error obteniendo las tareas:", error);
+      }
+   };
+
+   useEffect(() => {
+      fetchTasks(); // Cargar tareas
+   }, [spaceId]);
+
+
    const [isModalOpen, setModalOpen] = useState(false);
    const [isModalCatOpen, setModalCatOpen] = useState(false);
 
@@ -11,18 +32,6 @@ export const TaskBoard = () => {
    const toggleModalCatOpen = () => {
       setModalCatOpen(!isModalCatOpen);
    }
-
-   // BD
-   const [tasks, setTasks] = useState([]);
-   useEffect(() => {
-      axios.get('../../db.json')
-         .then(response => {
-            setTasks(response.data.tasks);
-         })
-         .catch(error => {
-            console.error('Error fetching tasks:', error);
-         });
-   }, []);
 
    // Para las categorías del tablero
    const [categoryCount, setCategoryCount] = useState(3);
@@ -72,13 +81,15 @@ export const TaskBoard = () => {
    };
 
    const handleTaskSelect = (task) => {
-      const newAssignedTasks = { ...assignedTasks };
+      const newAssignedTasks = { ...assignedTasks }; //Copia del estado (oper propa)
       if (!newAssignedTasks[selectedCategoryIndex]) {
          newAssignedTasks[selectedCategoryIndex] = [];
       }
       newAssignedTasks[selectedCategoryIndex].push(task);
 
       setAssignedTasks(newAssignedTasks);
+
+      //Bloqueo y tache
       setTasks(prevTasks =>
          prevTasks.map(t =>
             t.id === task.id ? { ...t, isChecked: true } : t
@@ -133,81 +144,12 @@ export const TaskBoard = () => {
 
    return (
       <div className="columns p-4">
-         <div className="column is-one-quarter" id="panel-task">
-            <div className="box">
-               <h2 className="title is-4">Listado de Tareas</h2>
-               <button className="button is-primary is-rounded is-small" onClick={toggleModalOpen} id="plus"><span className='has-text-primary-20-invert'>+</span></button>
-            </div>
-            <div className="box task-container">
-               {tasks.map(task => (
-                  <div key={task.id} className='task-box'>
-                     <label className="checkbox">
-                        <input type="checkbox" checked={task.isChecked || false} disabled={!activeCheckboxes || isTaskAssigned(task)} onChange={() => handleTaskChange(task)} />
-                        <span className={`subtitle is-6 ${task.isChecked ? 'has-text-grey-light' : ''}`}
-                           style={{ textDecoration: task.isChecked ? 'line-through' : 'none' }} >
-                           {task.title}
-                        </span>
-                     </label>
-                  </div>
-               ))}
-            </div>
-         </div>
-         {isModalOpen && (
-            <div className="modal is-active">
-               <div className="modal-background" onClick={toggleModalOpen}></div>
-               <div className="modal-card">
-                  <header className="modal-card-head">
-                     <p className="modal-card-title">Nueva tarea</p>
-                     <button className="delete" aria-label="close" onClick={toggleModalOpen}></button>
-                  </header>
-                  <section className="modal-card-body">
-                     <div className="field">
-                        <label className="label">Título</label>
-                        <div className="control">
-                           <input className="input is-text" type="text" placeholder="Text input" />
-                        </div>
-                     </div>
-                     <div className="field">
-                        <label className="label">Descripción</label>
-                        <div className="control">
-                           <textarea className="textarea is-text" placeholder="Textarea" rows={2}></textarea>
-                        </div>
-                     </div>
-                     <div className='columns'>
-                        <div className='column is-half'>
-                           <div className="field">
-                              <label className="label">Vencimiento</label>
-                              <div className="control">
-                                 <input className="input is-text" type="date" placeholder="Text input" />
-                              </div>
-                           </div>
-                        </div>
-                        <div className='column is-half'>
-                           <div className="field">
-                              <label className="label">Importancia</label>
-                              <div className="control">
-                                 <div className="select is-fullwidth is-text">
-                                    <select>
-                                       <option>Urgente</option>
-                                       <option>Alta</option>
-                                       <option>Media</option>
-                                       <option>Baja</option>
-                                    </select>
-                                 </div>
-                              </div>
-                           </div>
-                        </div>
-                     </div>
-                  </section>
-                  <footer className="modal-card-foot">
-                     <div className="buttons">
-                        <button className="button is-success">Guardar</button>
-                        <button className="button" onClick={toggleModalOpen}>Cancelar</button>
-                     </div>
-                  </footer>
-               </div>
-            </div>
-         )}
+         <Task
+            toggleModalOpen={() => { }}
+            activeCheckboxes={activeCheckboxes}
+            handleTaskChange={handleTaskChange}
+            tasks={tasks}
+         />
          <div className="column" id="panel-board">
             <div className="box header">
                <h2 className="title">Tablero Kanban</h2>
@@ -244,10 +186,7 @@ export const TaskBoard = () => {
                                        key={taskIndex}
                                        className='task-box-2'
                                        onClick={() => handleTaskRemove(task, index)}
-                                       onContextMenu={(e) => {
-                                          e.preventDefault();
-                                          handleTaskMoveToNext(task, index);
-                                       }}
+                                       
                                     >
                                        <span className='subtitle is-6'>{task.title}</span>
                                     </div>
@@ -271,9 +210,9 @@ export const TaskBoard = () => {
                   <section className="modal-card-body">
                      <div className="field">
                         <label className="label">Cantidad de Categorías</label>
-                        <div className="control">
+                        <div className="control ">
                            <input
-                              className="input"
+                              className="input is-text"
                               type="number"
                               value={categoryCount}
                               onChange={handleCategoryCountChange}
@@ -281,23 +220,27 @@ export const TaskBoard = () => {
                            />
                         </div>
                      </div>
-                     {categoryNames.map((name, index) => (
-                        <div key={index} className="field">
-                           <label className="label">{`Nombre de Categoría ${index + 1}`}</label>
-                           <div className="control">
-                              <input
-                                 className="input"
-                                 type="text"
-                                 value={name}
-                                 onChange={(event) => handleCategoryNameChange(index, event)}
-                                 placeholder={`Categoría ${index + 1}`}
-                              />
+                     <div className="columns is-multiline">
+                        {categoryNames.map((name, index) => (
+                           <div key={index} className="column is-half">
+                              <div className="field">
+                                 <label className="label">{`Nombre de Categoría ${index + 1}`}</label>
+                                 <div className="control">
+                                    <input
+                                       className="input"
+                                       type="text"
+                                       value={name}
+                                       onChange={(event) => handleCategoryNameChange(index, event)}
+                                       placeholder={`Categoría ${index + 1}`}
+                                    />
+                                 </div>
+                              </div>
                            </div>
-                        </div>
-                     ))}
+                        ))}
+                     </div>
                   </section>
                   <footer className="modal-card-foot">
-                     <button className="button is-success" onClick={handleCreateBoard}>Crear</button>
+                     <button className="button is-success" onClick={handleCreateBoard}>Crear</button>&nbsp;
                      <button className="button" onClick={toggleModalCatOpen}>Cancelar</button>
                   </footer>
                </div>
